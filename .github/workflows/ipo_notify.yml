@@ -8,6 +8,12 @@ on:
     - cron: "0 0 1 * *"
     # 매일 오전 6시 30분 KST (UTC 21:30 전날) - 미국 증시 요약 (평일만)
     - cron: "30 21 * * 0-4"
+    # 매일 오후 4시 KST (UTC 07:00) - 국내 증시 마감 요약 (평일만)
+    - cron: "0 7 * * 1-5"
+    # 매일 오후 6시 KST (UTC 09:00) - 공모주 청약 마감 경쟁률 (평일만)
+    - cron: "0 9 * * 1-5"
+    # 매주 월요일 오전 8시 KST (UTC 23:00 전날 일요일) - 주간 투자 일정 요약
+    - cron: "0 23 * * 0"
   workflow_dispatch:  # 수동 실행 버튼
 
 jobs:
@@ -81,3 +87,54 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python src/us_market.py
+
+  kr-market:
+    name: 국내 증시 마감 요약
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 7 * * 1-5'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests beautifulsoup4
+      - name: 국내 증시 알림 실행
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python src/kr_market.py
+
+  ipo-competition:
+    name: 공모주 청약 경쟁률
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 9 * * 1-5'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests beautifulsoup4
+      - name: 공모주 경쟁률 알림 실행
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python src/ipo_competition.py
+
+  weekly-summary:
+    name: 주간 투자 일정 요약
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 23 * * 0'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests beautifulsoup4
+      - name: 주간 요약 알림 실행
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python src/weekly_summary.py

@@ -29,6 +29,33 @@ def fetch_quote(symbol: str) -> dict:
         return None
 
 
+def fetch_fear_greed() -> dict:
+    """CNN Fear & Greed Index 조회"""
+    url = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        res = requests.get(url, headers=headers, timeout=10)
+        data = res.json()
+        score = data["fear_and_greed"]["score"]
+        rating = data["fear_and_greed"]["rating"]
+        prev_score = data["fear_and_greed"]["previous_close"]
+        label_map = {
+            "Extreme Fear": "극단적 공포 😱",
+            "Fear": "공포 😨",
+            "Neutral": "중립 😐",
+            "Greed": "탐욕 😏",
+            "Extreme Greed": "극단적 탐욕 🤑",
+        }
+        return {
+            "score": round(score),
+            "rating": label_map.get(rating, rating),
+            "prev_score": round(prev_score),
+        }
+    except Exception as e:
+        print(f"Fear & Greed 조회 실패: {e}")
+        return None
+
+
 def fetch_us_news(count: int = 3) -> list:
     """Google News RSS에서 미국 주요 뉴스 가져오기"""
     url = "https://news.google.com/rss/search?q=US+economy+stock+market&hl=en-US&gl=US&ceid=US:en"
@@ -117,6 +144,17 @@ def build_us_market_message() -> str:
                 f"  {arrow(q['change'])} {name}\n"
                 f"    {prefix}{q['price']:,.2f}  {fmt(q['change'], q['change_pct'])}"
             )
+
+    lines.append("")
+    fg = fetch_fear_greed()
+    if fg:
+        diff = fg["score"] - fg["prev_score"]
+        sign = "+" if diff >= 0 else ""
+        lines.append(
+            f"😰 <b>Fear & Greed Index</b>\n"
+            f"  현재: {fg['score']} / 100  {fg['rating']}\n"
+            f"  전일 대비: {sign}{diff}점"
+        )
 
     lines.append("")
     lines.append("📰 <b>미국 주요 뉴스</b>")
