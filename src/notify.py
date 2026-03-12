@@ -28,7 +28,8 @@ def build_message(subscribe_today, listing_today):
         for s in subscribe_today:
             lines.append(
                 f"  • {s['name']}\n"
-                f"    청약기간: {s['subscribe_start']} ~ {s['subscribe_end']}"
+                f"    청약기간: {s['subscribe_start']} ~ {s['subscribe_end']}\n"
+                f"    주관증권사: {s.get('underwriter', '-')}"
             )
 
     if listing_today:
@@ -36,7 +37,11 @@ def build_message(subscribe_today, listing_today):
             lines.append("")
         lines.append("🚀 <b>오늘 공모주 상장</b>")
         for s in listing_today:
-            lines.append(f"  • {s['name']}  (상장일: {s['listing_date']})")
+            lines.append(
+                f"  • {s['name']}\n"
+                f"    상장일: {s['listing_date']}\n"
+                f"    주관증권사: {s.get('underwriter', '-')}"
+            )
 
     if not subscribe_today and not listing_today:
         return None  # 오늘 해당 없으면 알림 안 보냄

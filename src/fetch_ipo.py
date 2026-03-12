@@ -58,6 +58,7 @@ def get_ipo_schedule():
             subscribe_start = cols[2].get_text(strip=True)
             subscribe_end = cols[3].get_text(strip=True)
             listing_date = cols[6].get_text(strip=True)
+            underwriter = cols[7].get_text(strip=True) if len(cols) > 7 else "-"
 
             # 날짜 형식 정규화 (예: 03/12 → 2026-03-12)
             def normalize_date(d):
@@ -81,6 +82,7 @@ def get_ipo_schedule():
                     "subscribe_start": normalize_date(subscribe_start),
                     "subscribe_end": normalize_date(subscribe_end),
                     "listing_date": normalize_date(listing_date),
+                    "underwriter": underwriter,
                 }
             )
     except Exception as e:
@@ -108,7 +110,7 @@ if __name__ == "__main__":
     sub, listing = get_today_events()
     print("=== 오늘 청약 시작 ===")
     for s in sub:
-        print(f"  {s['name']} (청약: {s['subscribe_start']} ~ {s['subscribe_end']})")
+        print(f"  {s['name']} (청약: {s['subscribe_start']} ~ {s['subscribe_end']}, 주관: {s['underwriter']})")
     print("=== 오늘 상장 ===")
     for s in listing:
-        print(f"  {s['name']} (상장일: {s['listing_date']})")
+        print(f"  {s['name']} (상장일: {s['listing_date']}, 주관: {s['underwriter']})")
