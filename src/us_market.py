@@ -29,6 +29,28 @@ def fetch_quote(symbol: str) -> dict:
         return None
 
 
+def fetch_us_news(count: int = 3) -> list:
+    """Google News RSS에서 미국 주요 뉴스 가져오기"""
+    url = "https://news.google.com/rss/search?q=US+economy+stock+market&hl=en-US&gl=US&ceid=US:en"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    news = []
+    try:
+        res = requests.get(url, headers=headers, timeout=10)
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(res.content)
+        items = root.findall(".//item")[:count]
+        for item in items:
+            title = item.findtext("title", "").strip()
+            link = item.findtext("link", "").strip()
+            # 출처 제거 (제목 끝 " - 매체명" 형식)
+            if " - " in title:
+                title = title.rsplit(" - ", 1)[0].strip()
+            news.append({"title": title, "link": link})
+    except Exception as e:
+        print(f"뉴스 조회 실패: {e}")
+    return news
+
+
 def arrow(change: float) -> str:
     return "🔺" if change >= 0 else "🔻"
 
@@ -54,12 +76,14 @@ def build_us_market_message() -> str:
         ("TSLA",  "테슬라"),
         ("AMZN",  "아마존"),
     ]
-    # 환율/원자재
+    # 환율/원자재/가상자산
     others = [
-        ("KRW=X",  "달러/원 환율"),
-        ("GC=F",   "금 선물"),
-        ("CL=F",   "WTI 원유"),
-        ("BTC-USD", "비트코인"),
+        ("KRW=X",  "달러/원",   "₩"),
+        ("JPY=X",  "달러/엔",   "¥"),
+        ("EURUSD=X","유로/달러", "$"),
+        ("GC=F",   "금 선물",   "$"),
+        ("CL=F",   "WTI 원유",  "$"),
+        ("BTC-USD","비트코인",  "$"),
     ]
 
     now = datetime.utcnow()
@@ -86,14 +110,22 @@ def build_us_market_message() -> str:
 
     lines.append("")
     lines.append("💱 <b>환율 / 원자재 / 가상자산</b>")
-    for symbol, name in others:
+    for symbol, name, prefix in others:
         q = fetch_quote(symbol)
         if q:
-            prefix = "$" if symbol != "KRW=X" else "₩"
             lines.append(
                 f"  {arrow(q['change'])} {name}\n"
                 f"    {prefix}{q['price']:,.2f}  {fmt(q['change'], q['change_pct'])}"
             )
+
+    lines.append("")
+    lines.append("📰 <b>미국 주요 뉴스</b>")
+    news_list = fetch_us_news(3)
+    if news_list:
+        for i, n in enumerate(news_list, 1):
+            lines.append(f"  {i}. <a href=\"{n['link']}\">{n['title']}</a>")
+    else:
+        lines.append("  뉴스를 불러오지 못했습니다.")
 
     return "\n".join(lines)
 
