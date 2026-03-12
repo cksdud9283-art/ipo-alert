@@ -80,7 +80,7 @@ def build_us_market_message() -> str:
     others = [
         ("KRW=X",  "달러/원",   "₩"),
         ("JPY=X",  "달러/엔",   "¥"),
-        ("EURUSD=X","유로/달러", "$"),
+        ("EURKRW=X","유로/원",   "₩"),
         ("GC=F",   "금 선물",   "$"),
         ("CL=F",   "WTI 원유",  "$"),
         ("BTC-USD","비트코인",  "$"),
