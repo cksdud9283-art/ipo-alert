@@ -1,7 +1,8 @@
 import requests
+import os
 
-TOKEN = "8669556184:AAFD8riH8ZLW0bIYccE9lfCbD3Z5JhP-P9M"
-CHAT_ID = "8035972183"
+TOKEN = os.environ.get("TELEGRAM_TOKEN")
+CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
 message = (
     "📋 <b>오늘 공모주 청약 시작</b>\n"

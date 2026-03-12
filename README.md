@@ -12,13 +12,6 @@ GitHub 저장소 → Settings → Secrets and variables → Actions → New repo
 | `TELEGRAM_TOKEN` | 텔레그램 봇 토큰 |
 | `TELEGRAM_CHAT_ID` | 텔레그램 Chat ID |
 
-## Secrets 값
-
-| Secret 이름 | 값 |
-|---|---|
-| `DART_API_KEY` | `fb73e43728924dcac03ce2e138393a667cb1cf61` |
-| `TELEGRAM_TOKEN` | BotFather에서 발급받은 토큰 |
-| `TELEGRAM_CHAT_ID` | `8035972183` |
 
 ## 파일 구조
 
