@@ -1,9 +1,21 @@
 import requests
 import os
+import ssl
 import urllib3
 from datetime import datetime
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from urllib3.util.ssl_ import create_urllib3_context
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+class LegacySSLAdapter(HTTPAdapter):
+    def init_poolmanager(self, *args, **kwargs):
+        ctx = create_urllib3_context()
+        ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        kwargs["ssl_context"] = ctx
+        super().init_poolmanager(*args, **kwargs)
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
@@ -17,7 +29,9 @@ def fetch_competition_rate() -> list:
     results = []
 
     try:
-        res = requests.get(url, headers=headers, timeout=10, verify=False)
+        session = requests.Session()
+        session.mount("https://", LegacySSLAdapter())
+        res = session.get(url, headers=headers, timeout=10)
         res.encoding = "euc-kr"
         soup = BeautifulSoup(res.text, "html.parser")
 

@@ -2,8 +2,22 @@ import requests
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 import os
+import ssl
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# 38커뮤니케이션 구형 SSL 대응용 어댑터
+from requests.adapters import HTTPAdapter
+from urllib3.util.ssl_ import create_urllib3_context
+
+class LegacySSLAdapter(HTTPAdapter):
+    def init_poolmanager(self, *args, **kwargs):
+        ctx = create_urllib3_context()
+        ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        kwargs["ssl_context"] = ctx
+        super().init_poolmanager(*args, **kwargs)
 
 DART_API_KEY = os.environ.get("DART_API_KEY")
 
@@ -46,7 +60,9 @@ def get_ipo_schedule():
     headers = {"User-Agent": "Mozilla/5.0"}
 
     try:
-        res = requests.get(url, headers=headers, timeout=10, verify=False)
+        session = requests.Session()
+        session.mount("https://", LegacySSLAdapter())
+        res = session.get(url, headers=headers, timeout=10)
         res.encoding = "euc-kr"
         soup = BeautifulSoup(res.text, "html.parser")
 
