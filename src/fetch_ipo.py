@@ -66,7 +66,7 @@ def get_ipo_schedule():
         res.encoding = "euc-kr"
         soup = BeautifulSoup(res.text, "html.parser")
 
-        rows = soup.select("table.type2 tr")
+        rows = soup.select('table[bgcolor="E6E9ED"] tr')
         for row in rows:
             cols = row.select("td")
             if len(cols) < 7:
