@@ -2,6 +2,8 @@ import requests
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 import os
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DART_API_KEY = os.environ.get("DART_API_KEY")
 
@@ -44,7 +46,7 @@ def get_ipo_schedule():
     headers = {"User-Agent": "Mozilla/5.0"}
 
     try:
-        res = requests.get(url, headers=headers, timeout=10)
+        res = requests.get(url, headers=headers, timeout=10, verify=False)
         res.encoding = "euc-kr"
         soup = BeautifulSoup(res.text, "html.parser")
 

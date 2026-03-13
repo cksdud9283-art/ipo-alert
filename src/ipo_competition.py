@@ -1,7 +1,9 @@
 import requests
 import os
+import urllib3
 from datetime import datetime
 from bs4 import BeautifulSoup
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
@@ -15,7 +17,7 @@ def fetch_competition_rate() -> list:
     results = []
 
     try:
-        res = requests.get(url, headers=headers, timeout=10)
+        res = requests.get(url, headers=headers, timeout=10, verify=False)
         res.encoding = "euc-kr"
         soup = BeautifulSoup(res.text, "html.parser")
 
