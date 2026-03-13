@@ -22,6 +22,51 @@ class LegacySSLAdapter(HTTPAdapter):
 DART_API_KEY = os.environ.get("DART_API_KEY")
 
 
+def get_underwriter_from_dart(company_name: str) -> str:
+    """DART API로 종목명 기준 주관사 조회"""
+    if not DART_API_KEY:
+        return "-"
+    try:
+        # 최근 1년 증권신고서(공모) 검색
+        today = datetime.today()
+        url = "https://opendart.fss.or.kr/api/list.json"
+        params = {
+            "crtfc_key": DART_API_KEY,
+            "corp_name": company_name,
+            "pblntf_ty": "I",
+            "bgn_de": (today - timedelta(days=365)).strftime("%Y%m%d"),
+            "end_de": today.strftime("%Y%m%d"),
+            "page_count": 5,
+        }
+        res = requests.get(url, params=params, timeout=10)
+        data = res.json()
+        if data.get("status") != "000":
+            return "-"
+        items = data.get("list", [])
+        if not items:
+            return "-"
+        # 첫 번째 공시의 rcept_no로 상세 조회
+        rcept_no = items[0].get("rcept_no")
+        detail_url = "https://opendart.fss.or.kr/api/irdsSttus.json"
+        detail_res = requests.get(detail_url, params={
+            "crtfc_key": DART_API_KEY,
+            "rcept_no": rcept_no,
+        }, timeout=10)
+        detail = detail_res.json()
+        if detail.get("status") != "000":
+            return "-"
+        detail_list = detail.get("list", [])
+        underwriters = [
+            d.get("lead_mng_nm", "") for d in detail_list
+            if d.get("lead_mng_nm")
+        ]
+        if underwriters:
+            return ", ".join(dict.fromkeys(underwriters))  # 중복 제거
+    except Exception as e:
+        print(f"DART 주관사 조회 실패 ({company_name}): {e}")
+    return "-"
+
+
 def get_ipo_list():
     """DART API에서 공모주 공시 목록 조회"""
     today = datetime.today()
@@ -152,12 +197,13 @@ def get_ipo_schedule():
                                 r["listing_date"] = listing_date
                                 break
                         else:
+                            underwriter = get_underwriter_from_dart(lname)
                             results.append({
                                 "name": lname,
                                 "subscribe_start": None,
                                 "subscribe_end": None,
                                 "listing_date": listing_date,
-                                "underwriter": "-",
+                                "underwriter": underwriter,
                             })
 
     except Exception as e:
