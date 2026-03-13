@@ -12,7 +12,7 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install requests beautifulsoup4
-      - name: 파싱 디버그
+      - name: 테이블25 상세 출력
         run: |
           python3 << 'EOF'
           import requests, ssl, urllib3
@@ -37,14 +37,15 @@ jobs:
           res.encoding = "euc-kr"
           soup = BeautifulSoup(res.text, "html.parser")
 
-          # 모든 테이블 클래스/속성 출력
           tables = soup.find_all("table")
-          print(f"총 테이블 수: {len(tables)}")
-          for i, t in enumerate(tables):
-              rows = t.find_all("tr")
-              if len(rows) > 3:
-                  cols = rows[1].find_all("td") if len(rows) > 1 else []
-                  if len(cols) >= 5:
-                      texts = [c.get_text(strip=True)[:15] for c in cols[:8]]
-                      print(f"테이블{i} (행:{len(rows)}, 열:{len(cols)}): {texts}")
+          # 테이블25 (인덱스 25)
+          t = tables[25]
+          rows = t.find_all("tr")
+          print(f"테이블25 행수: {len(rows)}")
+          for ri, row in enumerate(rows[:10]):
+              cols = row.find_all("td")
+              texts = [c.get_text(strip=True)[:25] for c in cols]
+              texts = [t for t in texts if t]
+              if texts:
+                  print(f"행{ri} ({len(cols)}열): {texts}")
           EOF
