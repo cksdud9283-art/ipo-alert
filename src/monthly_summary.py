@@ -28,16 +28,19 @@ def build_monthly_message():
 
     schedule = get_ipo_schedule()
 
-    # 이번 달 데이터만 필터링
+    # 이번 달 데이터만 필터링 (오늘 이후만)
     month_prefix = f"{year}-{month:02d}-"
+    today_str = today.strftime("%Y-%m-%d")
 
     subscribe_list = [
         s for s in schedule
         if s.get("subscribe_start") and s["subscribe_start"].startswith(month_prefix)
+        and s["subscribe_start"] >= today_str
     ]
     listing_list = [
         s for s in schedule
         if s.get("listing_date") and s["listing_date"].startswith(month_prefix)
+        and s["listing_date"] >= today_str
     ]
 
     # 날짜순 정렬
