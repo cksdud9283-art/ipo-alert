@@ -35,35 +35,54 @@ def fetch_competition_rate() -> list:
         res.encoding = "euc-kr"
         soup = BeautifulSoup(res.text, "html.parser")
 
-        rows = soup.select('table[bgcolor="E6E9ED"] tr')
+        tables = soup.find_all("table")
+        if len(tables) <= 25:
+            print(f"테이블 수 부족: {len(tables)}")
+            return results
+
+        rows = tables[25].find_all("tr")
         for row in rows:
-            cols = row.select("td")
-            if len(cols) < 7:
+            cols = row.find_all("td")
+            if len(cols) < 5:
                 continue
 
             name = cols[0].get_text(strip=True)
-            subscribe_end_raw = cols[3].get_text(strip=True)
-            competition = cols[4].get_text(strip=True) if len(cols) > 4 else "-"
-            underwriter = cols[7].get_text(strip=True) if len(cols) > 7 else "-"
+            period = cols[1].get_text(strip=True)  # 예: 2026.03.11~03.12
 
-            # 날짜 정규화
-            def normalize_date(d):
-                d = d.strip()
-                if not d or d == "-":
-                    return None
+            # 경쟁률 컬럼: cols[4], 주관사: cols[5] (경쟁률 있으면) 또는 cols[4]
+            competition = "-"
+            underwriter = cols[4].get_text(strip=True) if len(cols) > 4 else "-"
+            if len(cols) >= 6:
+                comp_raw = cols[4].get_text(strip=True)
+                if ":" in comp_raw:
+                    competition = comp_raw
+                    underwriter = cols[5].get_text(strip=True) if len(cols) > 5 else "-"
+
+            # 경쟁률 없는 경우 스킵 (아직 마감 안 됨)
+            if competition == "-":
+                continue
+
+            # 청약 종료일 파싱
+            subscribe_end = None
+            if "~" in period:
+                parts = period.split("~")
+                start_raw = parts[0].strip()
+                end_raw = parts[1].strip()
                 try:
-                    today_dt = datetime.today()
-                    month, day = d.split("/")
-                    dt = datetime(today_dt.year, int(month), int(day))
-                    return dt.strftime("%Y-%m-%d")
+                    start_date = datetime.strptime(start_raw, "%Y.%m.%d")
+                    year_str = start_raw[:4]
+                    if len(end_raw) <= 5:
+                        end_dt = datetime.strptime(f"{year_str}.{end_raw}", "%Y.%m.%d")
+                    else:
+                        end_dt = datetime.strptime(end_raw, "%Y.%m.%d")
+                    subscribe_end = end_dt.strftime("%Y-%m-%d")
                 except Exception:
-                    return None
+                    pass
 
-            end_date = normalize_date(subscribe_end_raw)
-            if end_date == today and competition and competition != "-":
+            if subscribe_end == today:
                 results.append({
                     "name": name,
-                    "subscribe_end": end_date,
+                    "subscribe_end": subscribe_end,
                     "competition": competition,
                     "underwriter": underwriter,
                 })
