@@ -1,0 +1,50 @@
+name: 공모주 디버그
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests beautifulsoup4
+      - name: 파싱 디버그
+        run: |
+          python3 << 'EOF'
+          import requests, ssl, urllib3
+          from bs4 import BeautifulSoup
+          from requests.adapters import HTTPAdapter
+          from urllib3.util.ssl_ import create_urllib3_context
+          urllib3.disable_warnings()
+
+          class LegacySSLAdapter(HTTPAdapter):
+              def init_poolmanager(self, *args, **kwargs):
+                  ctx = create_urllib3_context()
+                  ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
+                  ctx.check_hostname = False
+                  ctx.verify_mode = ssl.CERT_NONE
+                  kwargs["ssl_context"] = ctx
+                  super().init_poolmanager(*args, **kwargs)
+
+          url = "https://www.38.co.kr/html/fund/index.htm?o=k"
+          session = requests.Session()
+          session.mount("https://", LegacySSLAdapter())
+          res = session.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+          res.encoding = "euc-kr"
+          soup = BeautifulSoup(res.text, "html.parser")
+
+          # 모든 테이블 클래스/속성 출력
+          tables = soup.find_all("table")
+          print(f"총 테이블 수: {len(tables)}")
+          for i, t in enumerate(tables):
+              rows = t.find_all("tr")
+              if len(rows) > 3:
+                  cols = rows[1].find_all("td") if len(rows) > 1 else []
+                  if len(cols) >= 5:
+                      texts = [c.get_text(strip=True)[:15] for c in cols[:8]]
+                      print(f"테이블{i} (행:{len(rows)}, 열:{len(cols)}): {texts}")
+          EOF
