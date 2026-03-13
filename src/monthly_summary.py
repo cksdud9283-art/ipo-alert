@@ -32,11 +32,13 @@ def build_monthly_message():
     month_prefix = f"{year}-{month:02d}-"
     today_str = today.strftime("%Y-%m-%d")
 
+    # 청약: 마감일이 오늘 이후인 것 (오늘 청약 중인 것 포함)
     subscribe_list = [
         s for s in schedule
         if s.get("subscribe_start") and s["subscribe_start"].startswith(month_prefix)
-        and s["subscribe_start"] >= today_str
+        and (s.get("subscribe_end") or s["subscribe_start"]) >= today_str
     ]
+    # 상장: 오늘 이후 (오늘 상장 포함)
     listing_list = [
         s for s in schedule
         if s.get("listing_date") and s["listing_date"].startswith(month_prefix)
