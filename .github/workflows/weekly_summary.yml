@@ -1,0 +1,22 @@
+name: 주간 투자 일정 요약
+
+on:
+  schedule:
+    # 매주 월요일 오전 8시 KST (UTC 23:00 전날 일요일)
+    - cron: "0 23 * * 0"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests beautifulsoup4
+      - name: 주간 요약 알림 실행
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python src/weekly_summary.py

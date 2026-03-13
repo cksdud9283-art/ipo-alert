@@ -1,0 +1,22 @@
+name: 공모주 청약 경쟁률
+
+on:
+  schedule:
+    # 매일 오후 6시 KST (UTC 09:00, 평일)
+    - cron: "0 9 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests beautifulsoup4
+      - name: 공모주 경쟁률 알림 실행
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python src/ipo_competition.py

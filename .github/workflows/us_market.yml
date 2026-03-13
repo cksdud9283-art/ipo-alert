@@ -1,0 +1,22 @@
+name: 미국 증시 요약
+
+on:
+  schedule:
+    # 매일 오전 6시 30분 KST (UTC 21:30 전날, 평일)
+    - cron: "30 21 * * 0-4"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - name: 미국 증시 알림 실행
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python src/us_market.py
