@@ -97,7 +97,8 @@ def get_ipo_schedule():
     import re
     from bs4 import BeautifulSoup
 
-    today = datetime.today()
+    # UTC+9 KST 기준 (GitHub Actions는 UTC로 실행)
+    today = datetime.utcnow() + timedelta(hours=9)
     results = []
 
     url = "https://www.38.co.kr/html/fund/index.htm?o=k"
@@ -134,13 +135,10 @@ def get_ipo_schedule():
 
             name = cols[0].get_text(strip=True)
             period = cols[1].get_text(strip=True)  # 예: 2026.03.11~03.12
-            underwriter = cols[4].get_text(strip=True) if len(cols) > 4 else "-"
-
-            # 경쟁률 있으면 컬럼 밀림 (col[4]=경쟁률, col[5]=주관사)
-            if len(cols) >= 6:
-                comp = cols[4].get_text(strip=True)
-                if ":" in comp:  # 경쟁률 형식
-                    underwriter = cols[5].get_text(strip=True) if len(cols) > 5 else "-"
+            # 컬럼 구조: 종목명(0) | 청약기간(1) | 확정공모가(2) | 희망공모가(3) | 경쟁률(4) | 주관사(5)
+            underwriter = cols[5].get_text(strip=True) if len(cols) > 5 else "-"
+            if not underwriter:
+                underwriter = "-"
 
             # 청약기간 파싱: 2026.03.11~03.12
             subscribe_start = None
@@ -208,6 +206,13 @@ def get_ipo_schedule():
 
     except Exception as e:
         print(f"스크래핑 오류: {e}")
+
+    # DART API로 주관사 보완 (스크래핑 값보다 정확)
+    if DART_API_KEY:
+        for r in results:
+            dart_underwriter = get_underwriter_from_dart(r["name"])
+            if dart_underwriter and dart_underwriter != "-":
+                r["underwriter"] = dart_underwriter
 
     return results
 

@@ -31,7 +31,8 @@ def fetch_us_economic_calendar() -> list:
 
 def get_week_ipo_schedule() -> tuple:
     """이번 주 공모주 청약/상장 일정"""
-    today = datetime.today()
+    # UTC+9 KST 기준 (GitHub Actions는 UTC로 실행)
+    today = datetime.utcnow() + timedelta(hours=9)
     # 이번 주 월~금
     monday = today - timedelta(days=today.weekday())
     week_dates = [(monday + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(5)]
@@ -59,7 +60,8 @@ def send_telegram(message: str):
 
 
 def build_weekly_message() -> str:
-    today = datetime.today()
+    # UTC+9 KST 기준
+    today = datetime.utcnow() + timedelta(hours=9)
     monday = today - timedelta(days=today.weekday())
     friday = monday + timedelta(days=4)
 
