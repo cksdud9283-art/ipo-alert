@@ -1,10 +1,7 @@
 name: 공모주 청약 경쟁률
 
 on:
-  schedule:
-    # 매일 오후 6시 KST (UTC 09:00, 평일)
-    - cron: "0 9 * * 1-5"
-  workflow_dispatch:
+  workflow_dispatch:  # cron-job.org에서 매일 18:00 KST 평일에 트리거
 
 jobs:
   run:

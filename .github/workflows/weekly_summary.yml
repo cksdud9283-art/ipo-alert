@@ -1,10 +1,7 @@
 name: 주간 투자 일정 요약
 
 on:
-  schedule:
-    # 매주 월요일 오전 8시 KST (UTC 23:00 전날 일요일)
-    - cron: "0 23 * * 0"
-  workflow_dispatch:
+  workflow_dispatch:  # cron-job.org에서 매주 월요일 08:00 KST에 트리거
 
 jobs:
   run:
