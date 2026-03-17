@@ -207,9 +207,16 @@ def get_ipo_schedule():
     except Exception as e:
         print(f"스크래핑 오류: {e}")
 
-    # DART API로 주관사 보완 (스크래핑 값보다 정확)
+    # DART API로 주관사 보완 - 향후 2주 이내 종목만 조회 (전체 조회 시 타임아웃 방지)
     if DART_API_KEY:
+        cutoff = today + timedelta(days=14)
         for r in results:
+            sub = r.get("subscribe_start")
+            lst = r.get("listing_date")
+            in_range = (sub and sub <= cutoff.strftime("%Y-%m-%d")) or \
+                       (lst and lst <= cutoff.strftime("%Y-%m-%d"))
+            if not in_range:
+                continue
             dart_underwriter = get_underwriter_from_dart(r["name"])
             if dart_underwriter and dart_underwriter != "-":
                 r["underwriter"] = dart_underwriter
