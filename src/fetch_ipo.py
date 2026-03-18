@@ -225,12 +225,14 @@ def get_ipo_schedule():
 
 
 def get_today_events():
-    """오늘 청약 시작일 또는 상장일에 해당하는 공모주 반환"""
-    today = datetime.today().strftime("%Y-%m-%d")
+    """오늘 청약 중(시작~종료 포함) 또는 상장일에 해당하는 공모주 반환"""
+    today = (datetime.utcnow() + timedelta(hours=9)).strftime("%Y-%m-%d")
     schedule = get_ipo_schedule()
 
     subscribe_today = [
-        s for s in schedule if s.get("subscribe_start") == today
+        s for s in schedule
+        if s.get("subscribe_start") and s.get("subscribe_end")
+        and s["subscribe_start"] <= today <= s["subscribe_end"]
     ]
     listing_today = [
         s for s in schedule if s.get("listing_date") == today
