@@ -47,7 +47,7 @@ def fetch_kr_news(count: int = 3) -> list:
 
 
 def arrow(change: float) -> str:
-    return "🔴▲" if change >= 0 else "🔵▼"
+    return "🔺" if change >= 0 else "🔽"
 
 
 def fmt(change: float, change_pct: float) -> str:
