@@ -1,7 +1,9 @@
 name: 주식 스크리닝 알림
 
 on:
-  workflow_dispatch:  # cron-job.org에서 매일 오전 9:00 KST 트리거
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 1"  # 매주 월요일 09:00 KST (UTC 00:00)
 
 jobs:
   run:
